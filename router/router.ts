@@ -1,7 +1,7 @@
 import {Router} from "express";
-import {changePassword, getUserData, login, register} from "./controller";
-import {authorize, authorizeLogin} from "./middleware";
-const {authorizeRegister} = require('./middleware')
+import {changePassword, getUserData, login, register} from "../controllers/controller";
+import {authorize, authorizeLogin} from "../middleware/middleware";
+const {authorizeRegister} = require('../middleware/middleware')
 
 const router: Router = Router()
 

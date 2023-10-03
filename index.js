@@ -11,7 +11,7 @@ require('dotenv').config();
 const mongoose = require('mongoose');
 const app = (0, express_1.default)();
 const server = (0, node_http_1.createServer)(app);
-const router = require('./router');
+const router = require('./router/router');
 app.use((0, cors_1.default)());
 app.use(body_parser_1.default.json());
 app.use('/', router);

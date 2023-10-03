@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.changePassword = exports.getUserData = exports.login = exports.register = void 0;
-const userDb = require('./modules/userSchema');
+const userDb = require('../modules/userSchema');
 const bcrypt = require('bcrypt');
 const resSend = (res, error, message, data) => {
     res.send({ error, data, message });

@@ -1,9 +1,9 @@
 import {NextFunction, Request, RequestHandler, Response} from "express";
-import {IncomingDataTypes, JwtData, RequestWithData, ResSendFunction, UserTypes} from "./types";
+import {IncomingDataTypes, JwtData, RequestWithData, ResSendFunction, UserTypes} from "../types";
 import exp from "constants";
 import {JwtPayload} from "jsonwebtoken";
 const bcrypt = require('bcrypt')
-const userDb = require('./modules/userSchema')
+const userDb = require('../modules/userSchema')
 const jwt = require('jsonwebtoken')
 
 type DataToToken = {

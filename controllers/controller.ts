@@ -1,6 +1,6 @@
 import {RequestHandler, Response} from "express";
-import {IncomingDataTypes, RequestWithData, ResSendFunction, UserTypes} from "./types";
-const userDb = require('./modules/userSchema')
+import {IncomingDataTypes, RequestWithData, ResSendFunction, UserTypes} from "../types";
+const userDb = require('../modules/userSchema')
 const bcrypt = require('bcrypt')
 
 const resSend: ResSendFunction = (res, error, message, data): void => {

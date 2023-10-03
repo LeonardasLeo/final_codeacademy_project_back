@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.authorize = exports.authorizeLogin = exports.authorizeRegister = void 0;
 const bcrypt = require('bcrypt');
-const userDb = require('./modules/userSchema');
+const userDb = require('../modules/userSchema');
 const jwt = require('jsonwebtoken');
 const resSend = (res, error, message, data) => {
     res.send({ error, data, message });

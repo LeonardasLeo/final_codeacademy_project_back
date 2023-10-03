@@ -6,7 +6,7 @@ require('dotenv').config()
 const mongoose = require('mongoose')
 const app = express()
 const server = createServer(app)
-const router = require('./router')
+const router = require('./router/router')
 
 
 app.use(cors())
