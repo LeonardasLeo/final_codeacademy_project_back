@@ -1,11 +1,26 @@
-import {RequestHandler, Response} from "express";
-import {IncomingDataTypes, RequestWithData, ResSendFunction, UserTypes} from "../types";
+import {Request, RequestHandler, Response} from "express";
+import {IncomingDataTypes, RequestWithData, UserTypes} from "../types";
+import {resSend} from "../modules/resSend";
 const userDb = require('../modules/userSchema')
+const postDb = require('../modules/postSchema')
 const bcrypt = require('bcrypt')
 
-const resSend: ResSendFunction = (res, error, message, data): void => {
-    res.send({error, data, message})
+type GetAllData = {
+    user: UserTypes.User
+    allPosts: UserTypes.Post[]
+    allUsers: UserTypes.User[]
 }
+
+const getAllData = async (res: Response, username: string | undefined): Promise<GetAllData | void> => {
+    const user: UserTypes.User = await userDb.findOne({username}, {password: 0})
+    if (!user) return resSend(res, true, 'User not found in database', null)
+    const allPosts: UserTypes.Post[] = await postDb.find()
+    let allUsers: UserTypes.User[] = await userDb.find()
+    allUsers = allUsers.filter((x: UserTypes.User) => x.username !== username)
+    return {user, allPosts, allUsers}
+}
+
+
 export const register: RequestHandler = (req: RequestWithData, res: Response): void => {
     const {username}: IncomingDataTypes.RegisterAndLoginData = req.body
     const {hash} = req
@@ -28,20 +43,94 @@ export const register: RequestHandler = (req: RequestWithData, res: Response): v
 
 export const login: RequestHandler = async (req: RequestWithData, res: Response): Promise<void> => {
     const {token, username} = req
-    const user: UserTypes.User = await userDb.findOne({username}, {password: 0})
-    resSend(res, false, null, {user, token})
+    const data: GetAllData | void = await getAllData(res, username)
+    if (!data) return
+    const {user, allPosts, allUsers}: GetAllData = data
+    resSend(res, false, null, {user, token, allPosts, allUsers})
 }
 
 export const getUserData: RequestHandler = async (req: RequestWithData, res: Response): Promise<void> => {
     const {username} = req
-    const user: UserTypes.User = await userDb.findOne({username}, {password: 0})
-    resSend(res, false, null, user)
+    const data: GetAllData | void = await getAllData(res, username)
+    if (!data) return
+    const {user, allPosts, allUsers}: GetAllData = data
+    resSend(res, false, null, {user, allUsers, allPosts})
 }
 
 export const changePassword: RequestHandler = async (req: RequestWithData, res: Response): Promise<void> => {
     const {username} = req
     const {passwordOne}: {passwordOne: string} = req.body
     const newPassword: string = await bcrypt.hash(passwordOne, 10)
-    await userDb.findOneAndUpdate({username}, {$set: {password: newPassword}})
+    const updatedUser: UserTypes.User = await userDb.findOneAndUpdate({username}, {$set: {password: newPassword}})
+    if (!updatedUser) return resSend(res, true, 'User not found in database', null)
     resSend(res, false, 'Password changed', null)
+}
+
+export const changeProfilePic: RequestHandler = async (req: RequestWithData, res: Response): Promise<void> => {
+    const {username} = req
+    const {image}: {image: string} = req.body
+    const updatedUser: UserTypes.User = await userDb.findOneAndUpdate({username}, {$set: {profilePic: image}}, {new: true, password: 0})
+    if (!updatedUser) return resSend(res, true, 'User not found in database', null)
+    resSend(res, false, 'Picture changed', updatedUser)
+}
+
+export const addPost: RequestHandler = async (req: RequestWithData, res: Response): Promise<void> => {
+    const {username} = req
+    const {title, image}: IncomingDataTypes.PostData = req.body
+    const post: UserTypes.Post = new postDb({
+        username,
+        image,
+        title,
+        likes: 0,
+        dislikes: 0,
+        comments: [],
+        timestamp: new Date()
+    })
+    // @ts-ignore
+    post.save()
+        .then((): void => {
+            resSend(res, false, 'post added to db', null)
+        })
+        .catch((): void => {
+            resSend(res, true, 'failed to add post to db', null)
+        })
+}
+
+export const likePost: RequestHandler = async (req: Request, res: Response): Promise<void> => {
+    const {id}: {id: string} = req.body
+    await postDb.findOneAndUpdate({_id: id}, {$inc: {likes: 1}}, {new: true})
+    resSend(res, false, 'Post liked', null)
+}
+
+export const dislikePost: RequestHandler = async (req: Request, res: Response): Promise<void> => {
+    const {id}: {id: string} = req.body
+    await postDb.findOneAndUpdate({_id: id}, {$inc: {dislikes: 1}}, {new: true})
+    resSend(res, false, 'Post disliked', null)
+}
+
+export const sendMessage: RequestHandler = async (req: RequestWithData, res: Response): Promise<void> => {
+    const {username} = req
+    const {messageValue, to}: IncomingDataTypes.MessageData = req.body
+    if (!username) return resSend(res, true, 'Couldn\'t authorize sender', null)
+    const message: UserTypes.Message = {
+        sender: username,
+        value: messageValue
+    }
+    await userDb.findOneAndUpdate({username: to.username}, {$push: {[`messages.${username}`]: message}})
+    await userDb.findOneAndUpdate({username}, {$push: {[`messages.${to.username}`]: message}}, {new: true})
+    resSend(res, false, 'Message sent', null)
+}
+
+export const getSinglePost: RequestHandler = async (req: Request, res: Response): Promise<void> => {
+    const {id}: {id: string} = req.body
+    const post: UserTypes.Post | undefined = await postDb.findOne({_id: id})
+    if (!post) return resSend(res, true, 'Couldn\'t get post', null)
+    resSend(res, false, null, post)
+}
+
+export const getSingleUser: RequestHandler = async (req: Request, res: Response): Promise<void> => {
+    const {username}: {username: string} = req.body
+    const user: UserTypes.User | undefined = await userDb.findOne({username})
+    if (!user) return resSend(res, true, 'Couldn\'t get user', null)
+    resSend(res, false, null, user)
 }

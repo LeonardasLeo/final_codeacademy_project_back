@@ -17,8 +17,8 @@ const userSchema = new Schema({
         type: Object,
         require: true,
     },
-    myPosts: {
-        type: Array,
+    likedPosts: {
+        type: Object,
         require: true
     },
 }, {minimize: false})

@@ -1,10 +1,18 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.changePassword = exports.getUserData = exports.login = exports.register = void 0;
+exports.getSingleUser = exports.getSinglePost = exports.sendMessage = exports.dislikePost = exports.likePost = exports.addPost = exports.changeProfilePic = exports.changePassword = exports.getUserData = exports.login = exports.register = void 0;
+const resSend_1 = require("../modules/resSend");
 const userDb = require('../modules/userSchema');
+const postDb = require('../modules/postSchema');
 const bcrypt = require('bcrypt');
-const resSend = (res, error, message, data) => {
-    res.send({ error, data, message });
+const getAllData = async (res, username) => {
+    const user = await userDb.findOne({ username }, { password: 0 });
+    if (!user)
+        return (0, resSend_1.resSend)(res, true, 'User not found in database', null);
+    const allPosts = await postDb.find();
+    let allUsers = await userDb.find();
+    allUsers = allUsers.filter((x) => x.username !== username);
+    return { user, allPosts, allUsers };
 };
 const register = (req, res) => {
     const { username } = req.body;
@@ -19,30 +27,111 @@ const register = (req, res) => {
     // @ts-ignore
     user.save()
         .then(() => {
-        resSend(res, false, 'saved user to db', null);
+        (0, resSend_1.resSend)(res, false, 'saved user to db', null);
     })
         .catch(() => {
-        resSend(res, true, 'failed to save user to db', null);
+        (0, resSend_1.resSend)(res, true, 'failed to save user to db', null);
     });
 };
 exports.register = register;
 const login = async (req, res) => {
     const { token, username } = req;
-    const user = await userDb.findOne({ username }, { password: 0 });
-    resSend(res, false, null, { user, token });
+    const data = await getAllData(res, username);
+    if (!data)
+        return;
+    const { user, allPosts, allUsers } = data;
+    (0, resSend_1.resSend)(res, false, null, { user, token, allPosts, allUsers });
 };
 exports.login = login;
 const getUserData = async (req, res) => {
     const { username } = req;
-    const user = await userDb.findOne({ username }, { password: 0 });
-    resSend(res, false, null, user);
+    const data = await getAllData(res, username);
+    if (!data)
+        return;
+    const { user, allPosts, allUsers } = data;
+    (0, resSend_1.resSend)(res, false, null, { user, allUsers, allPosts });
 };
 exports.getUserData = getUserData;
 const changePassword = async (req, res) => {
     const { username } = req;
     const { passwordOne } = req.body;
     const newPassword = await bcrypt.hash(passwordOne, 10);
-    await userDb.findOneAndUpdate({ username }, { $set: { password: newPassword } });
-    resSend(res, false, 'Password changed', null);
+    const updatedUser = await userDb.findOneAndUpdate({ username }, { $set: { password: newPassword } });
+    if (!updatedUser)
+        return (0, resSend_1.resSend)(res, true, 'User not found in database', null);
+    (0, resSend_1.resSend)(res, false, 'Password changed', null);
 };
 exports.changePassword = changePassword;
+const changeProfilePic = async (req, res) => {
+    const { username } = req;
+    const { image } = req.body;
+    const updatedUser = await userDb.findOneAndUpdate({ username }, { $set: { profilePic: image } }, { new: true, password: 0 });
+    if (!updatedUser)
+        return (0, resSend_1.resSend)(res, true, 'User not found in database', null);
+    (0, resSend_1.resSend)(res, false, 'Picture changed', updatedUser);
+};
+exports.changeProfilePic = changeProfilePic;
+const addPost = async (req, res) => {
+    const { username } = req;
+    const { title, image } = req.body;
+    const post = new postDb({
+        username,
+        image,
+        title,
+        likes: 0,
+        dislikes: 0,
+        comments: [],
+        timestamp: new Date()
+    });
+    // @ts-ignore
+    post.save()
+        .then(() => {
+        (0, resSend_1.resSend)(res, false, 'post added to db', null);
+    })
+        .catch(() => {
+        (0, resSend_1.resSend)(res, true, 'failed to add post to db', null);
+    });
+};
+exports.addPost = addPost;
+const likePost = async (req, res) => {
+    const { id } = req.body;
+    await postDb.findOneAndUpdate({ _id: id }, { $inc: { likes: 1 } }, { new: true });
+    (0, resSend_1.resSend)(res, false, 'Post liked', null);
+};
+exports.likePost = likePost;
+const dislikePost = async (req, res) => {
+    const { id } = req.body;
+    await postDb.findOneAndUpdate({ _id: id }, { $inc: { dislikes: 1 } }, { new: true });
+    (0, resSend_1.resSend)(res, false, 'Post disliked', null);
+};
+exports.dislikePost = dislikePost;
+const sendMessage = async (req, res) => {
+    const { username } = req;
+    const { messageValue, to } = req.body;
+    if (!username)
+        return (0, resSend_1.resSend)(res, true, 'Couldn\'t authorize sender', null);
+    const message = {
+        sender: username,
+        value: messageValue
+    };
+    await userDb.findOneAndUpdate({ username: to.username }, { $push: { [`messages.${username}`]: message } });
+    await userDb.findOneAndUpdate({ username }, { $push: { [`messages.${to.username}`]: message } }, { new: true });
+    (0, resSend_1.resSend)(res, false, 'Message sent', null);
+};
+exports.sendMessage = sendMessage;
+const getSinglePost = async (req, res) => {
+    const { id } = req.body;
+    const post = await postDb.findOne({ _id: id });
+    if (!post)
+        return (0, resSend_1.resSend)(res, true, 'Couldn\'t get post', null);
+    (0, resSend_1.resSend)(res, false, null, post);
+};
+exports.getSinglePost = getSinglePost;
+const getSingleUser = async (req, res) => {
+    const { username } = req.body;
+    const user = await userDb.findOne({ username });
+    if (!user)
+        return (0, resSend_1.resSend)(res, true, 'Couldn\'t get user', null);
+    (0, resSend_1.resSend)(res, false, null, user);
+};
+exports.getSingleUser = getSingleUser;

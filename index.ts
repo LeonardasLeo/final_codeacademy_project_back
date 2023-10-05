@@ -2,11 +2,20 @@ import express from 'express'
 import cors from 'cors'
 import bodyParser from "body-parser";
 import {createServer} from 'node:http'
+import {Server} from "socket.io";
 require('dotenv').config()
 const mongoose = require('mongoose')
 const app = express()
-const server = createServer(app)
+export const server = createServer(app)
 const router = require('./router/router')
+
+const io = new Server((server),{
+    cors: {
+        origin: "*"
+    }
+});
+
+require('./modules/sockets')(io)
 
 
 app.use(cors())

@@ -1,5 +1,7 @@
-import {Response, Request} from "express";
+import {Request} from "express";
 import {JwtPayload} from "jsonwebtoken";
+import {Socket} from "socket.io";
+import {DefaultEventsMap} from "socket.io/dist/typed-events";
 
 export interface RequestWithData extends Request {
     hash?: string
@@ -9,39 +11,57 @@ export interface RequestWithData extends Request {
 
 export namespace IncomingDataTypes {
     export type RegisterAndLoginData = {
-        username: string,
-        password: string,
+        username: string
+        password: string
     }
+    export type PostData = {
+        title: string
+        image: string
+    }
+    export type MessageData = {
+        messageValue: string
+        to: UserTypes.User
+    }
+    export type SocketCommunicationData = {
+        roomName: string
+        userOne: UserTypes.User
+        userTwo: UserTypes.User
+    }
+
 }
 
 export interface JwtData extends JwtPayload {
-    username: string,
+    username: string
     profilePic: string
 }
 
-export type ResSendFunction = (res: Response, error: boolean, message: string | null, data: any) => void
-
 export namespace UserTypes{
     export type Comment = {
-        username: string,
-        comment: string,
-        likes: number,
+        username: string
+        comment: string
+        likes: number
         dislikes: number
     }
-
     export type Post = {
-        image: string,
-        title: string,
-        likes: number,
-        dislikes: number,
+        _id: string
+        image: string
+        title: string
+        likes: number
+        dislikes: number
         comments: Comment[]
+        timestamp: number
     }
-
     export type User = {
-        username: string,
-        password: string,
-        profilePic: string,
-        messages: object,
-        myPosts: Post[]
+        _id: string
+        username: string
+        password: string
+        profilePic: string
+        messages: object
+    }
+    export type Message = {
+        sender: string
+        value: string
     }
 }
+
+export type SocketType = Socket<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, any>

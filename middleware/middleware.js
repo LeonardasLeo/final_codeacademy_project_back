@@ -1,17 +1,15 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.authorize = exports.authorizeLogin = exports.authorizeRegister = void 0;
+exports.validateImageLink = exports.authorize = exports.authorizeLogin = exports.authorizeRegister = void 0;
+const resSend_1 = require("../modules/resSend");
 const bcrypt = require('bcrypt');
 const userDb = require('../modules/userSchema');
 const jwt = require('jsonwebtoken');
-const resSend = (res, error, message, data) => {
-    res.send({ error, data, message });
-};
 const authorizeRegister = async (req, res, next) => {
     const { username, password } = req.body;
     const isUserInDb = await userDb.findOne({ username });
     if (isUserInDb)
-        return resSend(res, true, 'Username taken', null);
+        return (0, resSend_1.resSend)(res, true, 'Username taken', null);
     req.hash = await bcrypt.hash(password, 10);
     next();
 };
@@ -20,19 +18,15 @@ const authorizeLogin = async (req, res, next) => {
     const { username, password } = req.body;
     const userInDb = await userDb.findOne({ username });
     if (!userInDb)
-        return resSend(res, true, 'User doesnt exist', null);
+        return (0, resSend_1.resSend)(res, true, 'User doesnt exist', null);
     const isPasswordCorrect = await bcrypt.compare(password, userInDb.password);
     if (isPasswordCorrect) {
-        const user = {
-            username: userInDb.username,
-            profilePic: userInDb.profilePic
-        };
         req.username = userInDb.username;
-        req.token = jwt.sign(user, process.env.JWT_SECRET);
+        req.token = jwt.sign(userInDb.username, process.env.JWT_SECRET);
         next();
     }
     else {
-        return resSend(res, true, 'Password incorrect', null);
+        return (0, resSend_1.resSend)(res, true, 'Password incorrect', null);
     }
 };
 exports.authorizeLogin = authorizeLogin;
@@ -41,13 +35,29 @@ const authorize = (req, res, next) => {
     if (token) {
         jwt.verify(token, process.env.JWT_SECRET, (err, data) => {
             if (err)
-                return resSend(res, true, 'Verification error', null);
-            req.username = data.username;
+                return (0, resSend_1.resSend)(res, true, 'Verification error', null);
+            req.username = data;
             next();
         });
     }
     else {
-        resSend(res, true, 'Authorization token missing', null);
+        (0, resSend_1.resSend)(res, true, 'Authorization token missing', null);
     }
 };
 exports.authorize = authorize;
+const validateImageLink = (req, res, next) => {
+    const { image } = req.body;
+    function validURL(str) {
+        let pattern = new RegExp('^(https?:\\/\\/)?' +
+            '((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|' +
+            '((\\d{1,3}\\.){3}\\d{1,3}))' +
+            '(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*' +
+            '(\\?[;&a-z\\d%_.~+=-]*)?' +
+            '(\\#[-a-z\\d_]*)?$', 'i');
+        return pattern.test(str);
+    }
+    if (!validURL(image))
+        return (0, resSend_1.resSend)(res, true, 'Image link invalid', null);
+    next();
+};
+exports.validateImageLink = validateImageLink;
