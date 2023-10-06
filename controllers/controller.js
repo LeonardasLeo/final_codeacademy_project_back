@@ -79,8 +79,8 @@ const addPost = async (req, res) => {
         username,
         image,
         title,
-        likes: 0,
-        dislikes: 0,
+        likes: [],
+        dislikes: [],
         comments: [],
         timestamp: new Date()
     });
@@ -95,15 +95,15 @@ const addPost = async (req, res) => {
 };
 exports.addPost = addPost;
 const likePost = async (req, res) => {
+    const { username } = req;
     const { id } = req.body;
-    await postDb.findOneAndUpdate({ _id: id }, { $inc: { likes: 1 } }, { new: true });
-    (0, resSend_1.resSend)(res, false, 'Post liked', null);
+    await (0, postInteractionHanlder_1.togglePostInteraction)(username, id, res, 'likes');
 };
 exports.likePost = likePost;
 const dislikePost = async (req, res) => {
+    const { username } = req;
     const { id } = req.body;
-    await postDb.findOneAndUpdate({ _id: id }, { $inc: { dislikes: 1 } }, { new: true });
-    (0, resSend_1.resSend)(res, false, 'Post disliked', null);
+    await (0, postInteractionHanlder_1.togglePostInteraction)(username, id, res, 'dislikes');
 };
 exports.dislikePost = dislikePost;
 const sendMessage = async (req, res) => {

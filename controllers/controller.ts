@@ -1,7 +1,7 @@
 import {Request, RequestHandler, Response} from "express";
 import {IncomingDataTypes, RequestWithData, UserTypes} from "../types";
 import {resSend} from "../modules/resSend";
-import {toggleCommentInteraction} from "./postInteractionHanlder";
+import {toggleCommentInteraction, togglePostInteraction} from "./postInteractionHanlder";
 const userDb = require('../modules/userSchema')
 const postDb = require('../modules/postSchema')
 const bcrypt = require('bcrypt')
@@ -81,8 +81,8 @@ export const addPost: RequestHandler = async (req: RequestWithData, res: Respons
         username,
         image,
         title,
-        likes: 0,
-        dislikes: 0,
+        likes: [],
+        dislikes: [],
         comments: [],
         timestamp: new Date()
     })
@@ -96,16 +96,16 @@ export const addPost: RequestHandler = async (req: RequestWithData, res: Respons
         })
 }
 
-export const likePost: RequestHandler = async (req: Request, res: Response): Promise<void> => {
+export const likePost: RequestHandler = async (req: RequestWithData, res: Response): Promise<void> => {
+    const {username} = req
     const {id}: {id: string} = req.body
-    await postDb.findOneAndUpdate({_id: id}, {$inc: {likes: 1}}, {new: true})
-    resSend(res, false, 'Post liked', null)
+    await togglePostInteraction(username, id, res, 'likes')
 }
 
-export const dislikePost: RequestHandler = async (req: Request, res: Response): Promise<void> => {
+export const dislikePost: RequestHandler = async (req: RequestWithData, res: Response): Promise<void> => {
+    const {username} = req
     const {id}: {id: string} = req.body
-    await postDb.findOneAndUpdate({_id: id}, {$inc: {dislikes: 1}}, {new: true})
-    resSend(res, false, 'Post disliked', null)
+    await togglePostInteraction(username, id, res, 'dislikes')
 }
 
 export const sendMessage: RequestHandler = async (req: RequestWithData, res: Response): Promise<void> => {
