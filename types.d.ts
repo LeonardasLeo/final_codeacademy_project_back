@@ -27,6 +27,10 @@ export namespace IncomingDataTypes {
         userOne: UserTypes.User
         userTwo: UserTypes.User
     }
+    export type CommentOnPostData = {
+        comment: UserTypes.Comment
+        id: string
+    }
 
 }
 
@@ -37,17 +41,19 @@ export interface JwtData extends JwtPayload {
 
 export namespace UserTypes{
     export type Comment = {
+        id: number
         username: string
         comment: string
-        likes: number
-        dislikes: number
+        likes: string[]
+        dislikes: string[]
+        timestamp: Date
     }
     export type Post = {
         _id: string
         image: string
         title: string
-        likes: number
-        dislikes: number
+        likes: string[]
+        dislikes: string[]
         comments: Comment[]
         timestamp: number
     }

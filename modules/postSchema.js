@@ -38,11 +38,11 @@ const postSchema = new mongoose_1.Schema({
         require: true
     },
     likes: {
-        type: Number,
+        type: Array,
         require: true
     },
     dislikes: {
-        type: Number,
+        type: Array,
         require: true,
     },
     comments: {

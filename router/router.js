@@ -16,4 +16,7 @@ router.post('/dislikePost', middleware_1.authorize, controller_1.dislikePost);
 router.post('/sendMessage', middleware_1.authorize, controller_1.sendMessage);
 router.post('/getSinglePost', middleware_1.authorize, controller_1.getSinglePost);
 router.post('/getSingleUser', middleware_1.authorize, controller_1.getSingleUser);
+router.post('/comment', middleware_1.authorize, controller_1.comment);
+router.post('/likeComment', middleware_1.authorize, controller_1.likeComment);
+router.post('/dislikeComment', middleware_1.authorize, controller_1.dislikeComment);
 module.exports = router;

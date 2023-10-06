@@ -1,7 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getSingleUser = exports.getSinglePost = exports.sendMessage = exports.dislikePost = exports.likePost = exports.addPost = exports.changeProfilePic = exports.changePassword = exports.getUserData = exports.login = exports.register = void 0;
+exports.dislikeComment = exports.likeComment = exports.comment = exports.getSingleUser = exports.getSinglePost = exports.sendMessage = exports.dislikePost = exports.likePost = exports.addPost = exports.changeProfilePic = exports.changePassword = exports.getUserData = exports.login = exports.register = void 0;
 const resSend_1 = require("../modules/resSend");
+const postInteractionHanlder_1 = require("./postInteractionHanlder");
 const userDb = require('../modules/userSchema');
 const postDb = require('../modules/postSchema');
 const bcrypt = require('bcrypt');
@@ -135,3 +136,24 @@ const getSingleUser = async (req, res) => {
     (0, resSend_1.resSend)(res, false, null, user);
 };
 exports.getSingleUser = getSingleUser;
+const comment = async (req, res) => {
+    const { comment, id } = req.body;
+    const post = await postDb.findOneAndUpdate({ _id: id }, { $push: { comments: comment } }, { new: true });
+    if (!post)
+        return (0, resSend_1.resSend)(res, true, 'Failed to add comment', null);
+    (0, resSend_1.resSend)(res, false, 'Comment added', null);
+};
+exports.comment = comment;
+const likeComment = async (req, res) => {
+    const { username } = req;
+    const { commentId } = req.body;
+    await (0, postInteractionHanlder_1.toggleCommentInteraction)(username, commentId, res, 'likes');
+};
+exports.likeComment = likeComment;
+const dislikeComment = async (req, res) => {
+    const { username } = req;
+    const { commentId } = req.body;
+    const post = await postDb.findOne({ 'comments.id': commentId });
+    await (0, postInteractionHanlder_1.toggleCommentInteraction)(username, commentId, res, 'dislikes');
+};
+exports.dislikeComment = dislikeComment;

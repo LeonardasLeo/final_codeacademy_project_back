@@ -14,11 +14,11 @@ const postSchema = new Schema({
         require: true
     },
     likes: {
-        type: Number,
+        type: Array,
         require: true
     },
     dislikes: {
-        type: Number,
+        type: Array,
         require: true,
     },
     comments: {

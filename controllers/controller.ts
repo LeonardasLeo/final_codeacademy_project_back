@@ -1,6 +1,7 @@
 import {Request, RequestHandler, Response} from "express";
 import {IncomingDataTypes, RequestWithData, UserTypes} from "../types";
 import {resSend} from "../modules/resSend";
+import {toggleCommentInteraction} from "./postInteractionHanlder";
 const userDb = require('../modules/userSchema')
 const postDb = require('../modules/postSchema')
 const bcrypt = require('bcrypt')
@@ -19,7 +20,6 @@ const getAllData = async (res: Response, username: string | undefined): Promise<
     allUsers = allUsers.filter((x: UserTypes.User) => x.username !== username)
     return {user, allPosts, allUsers}
 }
-
 
 export const register: RequestHandler = (req: RequestWithData, res: Response): void => {
     const {username}: IncomingDataTypes.RegisterAndLoginData = req.body
@@ -133,4 +133,24 @@ export const getSingleUser: RequestHandler = async (req: Request, res: Response)
     const user: UserTypes.User | undefined = await userDb.findOne({username})
     if (!user) return resSend(res, true, 'Couldn\'t get user', null)
     resSend(res, false, null, user)
+}
+
+export const comment: RequestHandler = async (req: Request, res: Response): Promise<void> => {
+    const {comment, id}: IncomingDataTypes.CommentOnPostData = req.body
+    const post = await postDb.findOneAndUpdate({_id: id}, {$push: {comments: comment}}, {new: true})
+    if (!post) return resSend(res, true, 'Failed to add comment', null)
+    resSend(res, false, 'Comment added', null)
+}
+
+export const likeComment: RequestHandler = async (req: RequestWithData, res: Response): Promise<void> => {
+    const {username} = req
+    const {commentId}: {commentId: number} = req.body
+    await toggleCommentInteraction(username, commentId, res, 'likes')
+}
+
+export const dislikeComment: RequestHandler = async (req: RequestWithData, res: Response): Promise<void> => {
+    const {username} = req
+    const {commentId}: {commentId: number} = req.body
+    const post: UserTypes.Post = await postDb.findOne({'comments.id': commentId})
+    await toggleCommentInteraction(username, commentId, res, 'dislikes')
 }

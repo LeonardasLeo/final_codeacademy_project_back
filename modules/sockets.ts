@@ -7,7 +7,8 @@ const userDb = require('../modules/userSchema')
 
 module.exports = (io: Server<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, any>): void => {
     io.on('connection', (socket: SocketType): void => {
-        const token = socket.handshake.query.token
+        socket.on('userConnected', (val: string) => {
+            const token: string = val
             if (!token){
                 console.log('Socket connection refused')
             }else{
@@ -15,19 +16,12 @@ module.exports = (io: Server<DefaultEventsMap, DefaultEventsMap, DefaultEventsMa
                 if (!username) return console.log('Socket connection refused')
                 socket.join(`${username}-room`)
             }
-            socket.on('profilePictureChanged', async (): Promise<void> => {
-                const allUsers = await userDb.find()
-                io.emit('updateAllUsers', allUsers)
-            })
-        socket.on('postAdded', async (): Promise<void> => {
-            const allPosts = await postDb.find()
-            io.emit('updatePosts', allPosts)
         })
-        socket.on('postLiked', async (): Promise<void> => {
-            const allPosts = await postDb.find()
-            io.emit('updatePosts', allPosts)
+        socket.on('profilePictureChanged', async (): Promise<void> => {
+            const allUsers = await userDb.find()
+            io.emit('updateAllUsers', allUsers)
         })
-        socket.on('postDisliked', async (): Promise<void> => {
+        socket.on('postInteraction', async (): Promise<void> => {
             const allPosts = await postDb.find()
             io.emit('updatePosts', allPosts)
         })
@@ -41,6 +35,7 @@ module.exports = (io: Server<DefaultEventsMap, DefaultEventsMap, DefaultEventsMa
         socket.on('sendMessage', async ({roomName, userOne, userTwo}: IncomingDataTypes.SocketCommunicationData): Promise<void> => {
             const updatedUserOne: UserTypes.User = await userDb.findOne({username: userOne.username})
             const updatedUserTwo: UserTypes.User = await userDb.findOne({username: userTwo.username})
+            console.log(roomName)
             io.to(roomName).emit('updateUsers', {userOne: updatedUserOne, userTwo: updatedUserTwo})
         })
     })
