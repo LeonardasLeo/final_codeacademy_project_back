@@ -114,8 +114,7 @@ export const sendMessage: RequestHandler = async (req: RequestWithData, res: Res
     if (!username) return resSend(res, true, 'Couldn\'t authorize sender', null)
     const message: UserTypes.Message = {
         sender: username,
-        value: messageValue,
-        timestamp: new Date()
+        value: messageValue
     }
     await userDb.findOneAndUpdate({username: to.username}, {$push: {[`messages.${username}`]: message}})
     await userDb.findOneAndUpdate({username}, {$push: {[`messages.${to.username}`]: message}})
