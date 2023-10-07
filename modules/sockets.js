@@ -25,9 +25,9 @@ module.exports = (io) => {
             const allPosts = await postDb.find();
             io.emit('updatePosts', allPosts);
         });
-        socket.on('requestJoinRoomFromClient', async ({ roomName, userOne, userTwo }) => {
+        socket.on('requestJoinRoomFromClient', ({ roomName, userTwo }) => {
             socket.join(roomName);
-            io.to(`${userTwo.username}-room`).emit('requestRoomJoinFromServer', { roomName, userOne, userTwo });
+            io.to(`${userTwo.username}-room`).emit('requestRoomJoinFromServer', { roomName });
         });
         socket.on('joinRoom', (roomName) => {
             socket.join(roomName);
@@ -35,7 +35,6 @@ module.exports = (io) => {
         socket.on('sendMessage', async ({ roomName, userOne, userTwo }) => {
             const updatedUserOne = await userDb.findOne({ username: userOne.username });
             const updatedUserTwo = await userDb.findOne({ username: userTwo.username });
-            console.log(roomName);
             io.to(roomName).emit('updateUsers', { userOne: updatedUserOne, userTwo: updatedUserTwo });
         });
     });

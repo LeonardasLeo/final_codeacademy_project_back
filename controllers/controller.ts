@@ -117,7 +117,7 @@ export const sendMessage: RequestHandler = async (req: RequestWithData, res: Res
         value: messageValue
     }
     await userDb.findOneAndUpdate({username: to.username}, {$push: {[`messages.${username}`]: message}})
-    await userDb.findOneAndUpdate({username}, {$push: {[`messages.${to.username}`]: message}}, {new: true})
+    await userDb.findOneAndUpdate({username}, {$push: {[`messages.${to.username}`]: message}})
     resSend(res, false, 'Message sent', null)
 }
 

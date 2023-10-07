@@ -25,9 +25,9 @@ module.exports = (io: Server<DefaultEventsMap, DefaultEventsMap, DefaultEventsMa
             const allPosts = await postDb.find()
             io.emit('updatePosts', allPosts)
         })
-        socket.on('requestJoinRoomFromClient', async ({roomName, userOne , userTwo}: IncomingDataTypes.SocketCommunicationData): Promise<void> => {
+        socket.on('requestJoinRoomFromClient', ({roomName, userTwo}: IncomingDataTypes.SocketCommunicationData): void => {
             socket.join(roomName)
-            io.to(`${userTwo.username}-room`).emit('requestRoomJoinFromServer', {roomName, userOne, userTwo})
+            io.to(`${userTwo.username}-room`).emit('requestRoomJoinFromServer', {roomName})
         })
         socket.on('joinRoom', (roomName: string): void => {
             socket.join(roomName)
@@ -35,7 +35,6 @@ module.exports = (io: Server<DefaultEventsMap, DefaultEventsMap, DefaultEventsMa
         socket.on('sendMessage', async ({roomName, userOne, userTwo}: IncomingDataTypes.SocketCommunicationData): Promise<void> => {
             const updatedUserOne: UserTypes.User = await userDb.findOne({username: userOne.username})
             const updatedUserTwo: UserTypes.User = await userDb.findOne({username: userTwo.username})
-            console.log(roomName)
             io.to(roomName).emit('updateUsers', {userOne: updatedUserOne, userTwo: updatedUserTwo})
         })
     })

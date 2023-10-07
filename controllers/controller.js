@@ -116,7 +116,7 @@ const sendMessage = async (req, res) => {
         value: messageValue
     };
     await userDb.findOneAndUpdate({ username: to.username }, { $push: { [`messages.${username}`]: message } });
-    await userDb.findOneAndUpdate({ username }, { $push: { [`messages.${to.username}`]: message } }, { new: true });
+    await userDb.findOneAndUpdate({ username }, { $push: { [`messages.${to.username}`]: message } });
     (0, resSend_1.resSend)(res, false, 'Message sent', null);
 };
 exports.sendMessage = sendMessage;
