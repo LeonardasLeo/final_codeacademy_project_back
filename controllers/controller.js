@@ -113,7 +113,8 @@ const sendMessage = async (req, res) => {
         return (0, resSend_1.resSend)(res, true, 'Couldn\'t authorize sender', null);
     const message = {
         sender: username,
-        value: messageValue
+        value: messageValue,
+        timestamp: new Date()
     };
     await userDb.findOneAndUpdate({ username: to.username }, { $push: { [`messages.${username}`]: message } });
     await userDb.findOneAndUpdate({ username }, { $push: { [`messages.${to.username}`]: message } });
