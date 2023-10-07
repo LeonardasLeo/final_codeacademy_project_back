@@ -66,7 +66,8 @@ export namespace UserTypes{
     }
     export type Message = {
         sender: string
-        value: string
+        value: string,
+        timestamp: Date
     }
 }
 
