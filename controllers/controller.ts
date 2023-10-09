@@ -2,6 +2,7 @@ import {Request, RequestHandler, Response} from "express";
 import {IncomingDataTypes, RequestWithData, UserTypes} from "../types";
 import {resSend} from "../modules/resSend";
 import {toggleCommentInteraction, togglePostInteraction} from "./postInteractionHanlder";
+import {LogLevel} from "ts-loader/dist/logger";
 const userDb = require('../modules/userSchema')
 const postDb = require('../modules/postSchema')
 const bcrypt = require('bcrypt')
@@ -152,6 +153,14 @@ export const likeComment: RequestHandler = async (req: RequestWithData, res: Res
 export const dislikeComment: RequestHandler = async (req: RequestWithData, res: Response): Promise<void> => {
     const {username} = req
     const {commentId}: {commentId: number} = req.body
-    const post: UserTypes.Post = await postDb.findOne({'comments.id': commentId})
     await toggleCommentInteraction(username, commentId, res, 'dislikes')
+}
+
+export const deletePost: RequestHandler = async (req: RequestWithData, res: Response): Promise<void> => {
+    const {username} = req
+    const {id}: {id: string} = req.body
+    const post: UserTypes.Post = await postDb.findOne({_id: id})
+    if (post.username !== username) return resSend(res, true, 'Cannot delete others post', null)
+    await postDb.deleteOne({_id: id})
+    resSend(res, false, 'good', null)
 }

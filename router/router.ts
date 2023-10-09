@@ -2,7 +2,7 @@ import {Router} from "express";
 import {
     addPost,
     changePassword,
-    changeProfilePic, comment, dislikeComment, dislikePost, getSinglePost, getSingleUser,
+    changeProfilePic, comment, deletePost, dislikeComment, dislikePost, getSinglePost, getSingleUser,
     getUserData, likeComment,
     likePost,
     login,
@@ -27,5 +27,6 @@ router.post('/getSingleUser', authorize, getSingleUser)
 router.post('/comment', authorize, comment)
 router.post('/likeComment', authorize, likeComment)
 router.post('/dislikeComment', authorize, dislikeComment)
+router.post('/deletePost', authorize, deletePost)
 
 module.exports = router

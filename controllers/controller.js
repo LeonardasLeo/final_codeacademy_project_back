@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.dislikeComment = exports.likeComment = exports.comment = exports.getSingleUser = exports.getSinglePost = exports.sendMessage = exports.dislikePost = exports.likePost = exports.addPost = exports.changeProfilePic = exports.changePassword = exports.getUserData = exports.login = exports.register = void 0;
+exports.deletePost = exports.dislikeComment = exports.likeComment = exports.comment = exports.getSingleUser = exports.getSinglePost = exports.sendMessage = exports.dislikePost = exports.likePost = exports.addPost = exports.changeProfilePic = exports.changePassword = exports.getUserData = exports.login = exports.register = void 0;
 const resSend_1 = require("../modules/resSend");
 const postInteractionHanlder_1 = require("./postInteractionHanlder");
 const userDb = require('../modules/userSchema');
@@ -154,7 +154,16 @@ exports.likeComment = likeComment;
 const dislikeComment = async (req, res) => {
     const { username } = req;
     const { commentId } = req.body;
-    const post = await postDb.findOne({ 'comments.id': commentId });
     await (0, postInteractionHanlder_1.toggleCommentInteraction)(username, commentId, res, 'dislikes');
 };
 exports.dislikeComment = dislikeComment;
+const deletePost = async (req, res) => {
+    const { username } = req;
+    const { id } = req.body;
+    const post = await postDb.findOne({ _id: id });
+    if (post.username !== username)
+        return (0, resSend_1.resSend)(res, true, 'Cannot delete others post', null);
+    await postDb.deleteOne({ _id: id });
+    (0, resSend_1.resSend)(res, false, 'good', null);
+};
+exports.deletePost = deletePost;

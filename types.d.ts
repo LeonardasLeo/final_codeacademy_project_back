@@ -50,6 +50,7 @@ export namespace UserTypes{
     }
     export type Post = {
         _id: string
+        username: string,
         image: string
         title: string
         likes: string[]

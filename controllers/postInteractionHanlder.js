@@ -16,13 +16,13 @@ const toggleCommentInteraction = async (username, commentId, res, reactionType) 
     const oppositeReaction = reactionType === 'likes' ? 'dislikes' : 'likes';
     const isOppositeInteracted = comment[oppositeReaction].includes(username);
     if (isAlreadyInteracted) {
-        const updatedPost = await postDb.findOneAndUpdate({ 'comments.id': commentId }, { $pull: { [`comments.$.${reactionType}`]: username } });
+        await postDb.findOneAndUpdate({ 'comments.id': commentId }, { $pull: { [`comments.$.${reactionType}`]: username } });
         return (0, resSend_1.resSend)(res, false, 'Comment unliked', null);
     }
     else {
         const updatedPost = await postDb.findOneAndUpdate({ 'comments.id': commentId }, { $push: { [`comments.$.${reactionType}`]: username } });
         if (isOppositeInteracted) {
-            const updatedOpposite = await postDb.findOneAndUpdate({ 'comments.id': commentId }, { $pull: { [`comments.$.${oppositeReaction}`]: username } });
+            await postDb.findOneAndUpdate({ 'comments.id': commentId }, { $pull: { [`comments.$.${oppositeReaction}`]: username } });
         }
         return (0, resSend_1.resSend)(res, false, 'Comment liked', null);
     }
@@ -36,11 +36,11 @@ const togglePostInteraction = async (username, postId, res, reactionType) => {
     const oppositeReaction = reactionType === 'likes' ? 'dislikes' : 'likes';
     const isOppositeInteracted = post[oppositeReaction].includes(username);
     if (isAlreadyInteracted) {
-        const updatedPost = await postDb.findOneAndUpdate({ _id: postId }, { $pull: { [reactionType]: username } });
+        await postDb.findOneAndUpdate({ _id: postId }, { $pull: { [reactionType]: username } });
         return (0, resSend_1.resSend)(res, false, 'Comment unliked', null);
     }
     else {
-        const updatedPost = await postDb.findOneAndUpdate({ _id: postId }, { $push: { [reactionType]: username } }, { new: true });
+        await postDb.findOneAndUpdate({ _id: postId }, { $push: { [reactionType]: username } }, { new: true });
         if (isOppositeInteracted) {
             const updatedOpposite = await postDb.findOneAndUpdate({ _id: postId }, { $pull: { [oppositeReaction]: username } });
         }
