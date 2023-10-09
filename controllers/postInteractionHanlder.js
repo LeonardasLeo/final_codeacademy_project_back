@@ -20,7 +20,7 @@ const toggleCommentInteraction = async (username, commentId, res, reactionType) 
         return (0, resSend_1.resSend)(res, false, 'Comment unliked', null);
     }
     else {
-        const updatedPost = await postDb.findOneAndUpdate({ 'comments.id': commentId }, { $push: { [`comments.$.${reactionType}`]: username } });
+        await postDb.findOneAndUpdate({ 'comments.id': commentId }, { $push: { [`comments.$.${reactionType}`]: username } });
         if (isOppositeInteracted) {
             await postDb.findOneAndUpdate({ 'comments.id': commentId }, { $pull: { [`comments.$.${oppositeReaction}`]: username } });
         }
@@ -42,7 +42,7 @@ const togglePostInteraction = async (username, postId, res, reactionType) => {
     else {
         await postDb.findOneAndUpdate({ _id: postId }, { $push: { [reactionType]: username } }, { new: true });
         if (isOppositeInteracted) {
-            const updatedOpposite = await postDb.findOneAndUpdate({ _id: postId }, { $pull: { [oppositeReaction]: username } });
+            await postDb.findOneAndUpdate({ _id: postId }, { $pull: { [oppositeReaction]: username } });
         }
         return (0, resSend_1.resSend)(res, false, 'Comment liked', null);
     }
